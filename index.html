@@ -2,16 +2,44 @@
 <html>
     <head>
         <title>Audio Playing Test</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#00121a"> <!-- Colored Chrome Mobile Tabs! -->
+        <link rel="stylesheet" type="text/css" href="style/main.css">
+        <script>
+            function toggleDark() {
+                const elem = document.body;
+                let state = elem.getAttribute("dark");
+                if (state === null) {
+                    elem.setAttribute("dark", "");
+                } else {
+                    elem.removeAttribute("dark");
+                }
+            }
+        </script>
         <script type="module" src="./main.js"></script>
         <script src="./node_modules/showdown/dist/showdown.min.js"></script>
     </head>
-    <body>
-        <div id="builder">
-            <p>Insert the url to the RAW JSON schema</p>
-            <input id="schemaURL">
-            <button id="schemaURLGen">Generate URL</button>
-            <p id="genURL"></p>
-            <hr>
+    <body dark>
+        <div class="title-banner bg-gradient-a1-a2 fg-dark-color">
+            <div class="container text-center">
+                <h1 id="title">Web Audio Player</h1>
+                <hr>
+                <p>Web Audio Player</p>
+            </div>
         </div>
+        <div class="container">
+            <div id="builder">
+                <p>Insert the url to the RAW JSON schema</p>
+                <input id="schemaURL">
+                <button id="schemaURLGen">Generate URL</button>
+                <p id="genURL"></p>
+                <hr>
+            </div>
+            <div id="tracks"></div>
+            <hr>
+            <button class="" onclick="toggleDark()">Toggle Dark mode</button>
+        </div>
+        <div class="height-20"></div>
     </body>
 </html>

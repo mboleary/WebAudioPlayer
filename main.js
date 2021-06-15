@@ -9,11 +9,12 @@ function main() {
     let params = (new URL(document.location)).searchParams;
     let schemaLoc = params.get('s');
     if (schemaLoc) {
-        if (schemaLoc.indexOf(ORIGIN) === 0) {
-            loadSchema(schemaLoc);
-        } else {
-            loadSchema(ORIGIN + schemaLoc);
-        }
+        loadSchema(schemaLoc);
+        // if (schemaLoc.indexOf(ORIGIN) === 0) {
+        //     loadSchema(schemaLoc);
+        // } else {
+        //     loadSchema(ORIGIN + schemaLoc);
+        // }
         hideBuilder();
     }
 }
@@ -27,12 +28,13 @@ function genURLGenerator() {
 
     btn.addEventListener('click', () => {
         let urlTemp = input.value;
-        if (urlTemp.indexOf(ORIGIN) === 0) {
-            p.innerText = `${window.location.origin}${window.location.pathname}?s=${urlTemp}`;
-        } else {
-            console.log(urlTemp);
-            p.innerText = "Error: Unknown Origin"
-        }
+        p.innerText = `${window.location.origin}${window.location.pathname}?s=${urlTemp}`;
+        // if (urlTemp.indexOf(ORIGIN) === 0) {
+        //     p.innerText = `${window.location.origin}${window.location.pathname}?s=${urlTemp}`;
+        // } else {
+        //     console.log(urlTemp);
+        //     p.innerText = "Error: Unknown Origin"
+        // }
     });
 }
 
@@ -67,12 +69,18 @@ async function loadSchema(url) {
     };
 
     setTitle(schema.title);
-    setDescription(schema.description.text);
+    setDescription(await getDescription(schema.description));
 
     let frag = document.createDocumentFragment();
 
+    let h2 = document.createElement("h2");
+    h2.innerText = "Tracks";
+    h2.classList.add("hbar");
+
+    frag.appendChild(h2);
+
     for (const trk of schema.tracks) {
-        let temp = buildTrack(trk, ghInfo);
+        let temp = await buildTrack(trk, ghInfo);
         frag.appendChild(temp);
     }
 
@@ -98,8 +106,49 @@ function setTitle(title) {
 // Sets the description of the document
 function setDescription(desc) {
     let div = document.createElement('div');
-    div.innerText = desc;
+    div.innerHTML = desc;
     document.body.appendChild(div);
+}
+
+async function getDescription(obj) {
+    // Priority: HTTP, Markdown, Text
+    let isMd = false;
+    let content = "";
+    if (obj.url) {
+        try {
+            let resp = await fetch(obj.url);
+            if (resp.ok) {
+                content = await resp.text();
+                if (obj.url.indexOf(".md") === obj.url.length - 3) {
+                    isMd = true;
+                }
+            } else {
+                console.warn("Request not ok:", resp);
+                content = "";
+            }
+        } catch (err) {
+            console.warn("Error:", err);
+        }
+    }
+
+    if (!content) {
+        if (obj.md) {
+            isMd = true;
+            content = obj.md;
+        } else {
+            content = obj.text;
+        }
+    }
+
+    console.log("Content:", content, isMd);
+
+    if (isMd && window.showdown) {
+        let converter = new window.showdown.Converter();
+        let html = converter.makeHtml(content);
+        console.log(html);
+        return html;
+    }
+    return content;
 }
 
 function getAudioURL(url, ghInfo) {
@@ -112,14 +161,14 @@ function getAudioURL(url, ghInfo) {
     return `${ORIGIN}/${ghInfo.userName}/${ghInfo.repoName}/${ghInfo.branchName}/`;
 }
 
-function buildTrack(trackObj, ghInfo) {
+async function buildTrack(trackObj, ghInfo) {
     let divContain = document.createElement('div');
     let h3 = document.createElement('h3');
     let div = document.createElement('div');
     let audio = document.createElement('audio');
 
     h3.innerText = trackObj.title;
-    div.innerText = trackObj.description.text;
+    div.innerHTML = await getDescription(trackObj.description);
 
     audio.src = getAudioURL(trackObj.src, ghInfo);
     audio.controls = true;
